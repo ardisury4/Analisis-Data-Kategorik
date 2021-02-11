@@ -1,0 +1,272 @@
+---
+title: "Data Kategorik 1"
+author: "ardi surya"
+date: "2/11/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Penggunaan Software R untuk Ekplorasi Data Kategorik
+
+## Membaca Input data di R
+
+Sebelum kita belajar membaca input data di R, alangkah lebih baiknya kita
+melakukan set direktori terlebih dahulu agar apa yang kita lakukan pada
+praktikum hari ini tersimpan pada folder yang sama sehingga ke depannya
+akan mudah dalam melakukan pencarian.
+Cara melakukan set direktori di R adalah dengan menggunakan perintah
+**setwd (“alamat folder”)**
+Contohnya adalah sebagai berikut:
+**setwd(“C:/Users/62816/Downloads/ADK”)**
+Langkah berikutnya adalah melakukan input data, data
+• Membaca data format .txt
+  Untuk membaca data dalam bentuk file text kita dapat         menggunakan fungsi read.table
+  Contoh:
+  Data1 <- read.table("D:/Dropbox/campus/BAHAN AJAR/ADK/ADK    2020/Praktikum 8/Data P8.txt", header=TRUE)
+• Membaca data format .csv
+  Untuk membaca data dalam bentuk file text kita dapat         menggunakan fungsi read.csv
+  Contoh:
+  Data2 <- read.csv("D:/Dropbox/campus/BAHAN AJAR/ADK/ADK      2020/Praktikum 8/Data P8.csv", sep=",",header=TRUE)
+• Membata data format .sav
+  Untuk membaca data dalam bentuk file text kita dapat         menggunakan library foreign dengan fungsi read.spss
+  Contoh:
+  library("foreign")
+  Data3 <- read.spss("D:/Dropbox/campus/BAHAN AJAR/ADK/ADK     2020/Praktikum 8/Data P8.sav", to.data.frame=TRUE)
+## Deskripsi data melalui table dan grafik
+### Deskripsi data menggunakan tabel
+Tabel kontingensi dan tabel proporsi dapat digunakan pada data kategorik. Berikut akan disajikan contohnya dengan menggunakan data **Data P8.txt**.
+```{r}
+Data1 <- read.table("C:/Users/62816/Downloads/ADK/Data P8.txt", header=TRUE)
+#membuat tabel kontingensi dari data
+table1<-table(Data1$J.Kelamin,Data1$T.Pendidikan)
+rowSums(table1)
+colSums(table1)
+#membuat tabel proporsi dari data
+table2<-prop.table(table(Data1$J.Kelamin,Data1$T.Pendidikan))
+table2
+#membuat tabel 3 dimensi atau lebih
+table3<-ftable(Data1$J.Kelamin,Data1$T.Pendidikan,Data1$T.Pendapatan)
+table3
+```
+
+### Deskripsi data menggunakan Grafik
+
+Sajian grafis antar data kategorik yang dapat digunakan adalah:
+• The Grouped Dot Chart
+• The Grouped Dot-Whisker Chart
+• The Two-Way Dot Chart
+• The Side-by-Side Bar Chart
+• The Side-by-Side Bar-Whisker Chart
+• The Side-by-Side Stacked Bar Chart
+• The Mosaic Chart
+
+Berikut ilustrasi penerapannya:
+
+  Suatu survei dilakukan terhadap pengguna dan bukan pengguna jasa-jasa keuangan. Berikut ini tersaji tabulasi silang antara pekerjaan responden dengan skor tingkat kemampuannya dalam pengelolaan keuangan. Bagaimanakah hubungan antar kedua peubah ini?
+                    ![](data.png)
+
+
+1. The Grouped Dot Chart
+```{r}
+#Program untuk pengelompokan berdasarkan pekerjaan
+survei<-matrix(data=c(30,3,44,41,9,62,34,4,74,48,10,48,23,6,14),ncol=5,nrow=3,byrow=FALSE,dimnames=list(c("Rendah","Sedang","Tinggi"),c("Pertanian","PNS","Business owner","Profesional","Lainnya")))
+dotchart(survei,xlab="Frequency",xlim=c(0,100))
+#Program untuk pengelompokan berdasarkan kemampuan pengelolaan keuangan
+dotchart(t(survei),xlab="Frequency",xlim=c(0,100))
+#Bila diinginkan sajiannya berupa proporsi
+n<-sum(survei)
+propsurvei<-survei/n
+dotchart(propsurvei,xlab="Relative Frequency", xlim=c(0,0.3))
+#Proporsi dihitung menurut pekerjaan
+jumkerja <- colSums(survei)
+proppekerjaan <-survei/rbind(jumkerja,jumkerja,jumkerja)
+dotchart(proppekerjaan,xlab="Conditional Relative Frequency",xlim=c(0,1))
+#Proporsi dihitung menurut kemampuan perencanaan keuangan
+jumrkeu <- rowSums(survei)
+proprkeu <- t(survei)/rbind(jumrkeu,jumrkeu,jumrkeu,jumrkeu,jumrkeu)
+dotchart(proprkeu,xlab="Conditional Relative Frequency",xlim=c(0,0.5))
+```
+
+2. The Grouped Dot-Whisker Chart
+    Bila sajian grafik ditujukan untuk inferensia, statistik yang lebih tepat digunakan adalah proporsi yang didampingi dengan margin of error.
+
+```{r}
+survei<- matrix(data=c(30,3,44,41,9,62,34,4,74,48,10,48,23,6,14),ncol=5,nrow=3,byrow=FALSE,dimnames=list(c("Rendah","Sedang","Tinggi"),c("Pertanian","PNS","Business owner","Profesional","Lainnya")))
+n<-sum(survei)
+propsurvei<-survei/n
+dotchart(propsurvei,xlab="Proportion",lcolor="white",xlim=c(0,0.3))
+sd<-sqrt((1.-propsurvei)*propsurvei/n)
+sd<-sd*qnorm(0.975)
+hlo<-propsurvei-sd
+hhi<-propsurvei+sd
+titik<-c(propsurvei[,5],propsurvei[,4],propsurvei[,3],propsurvei[,2],propsurvei[,1])
+kiri <-c(hlo[,5],hlo[,4],hlo[,3],hlo[,2],hlo[,1])
+kanan<-c(hhi[,5],hhi[,4],hhi[,3],hhi[,2],hhi[,1])
+dlx<-cbind(kiri,titik,kanan)
+ys<-c(1:3,6:8,11:13,16:18,21:23)
+dly<-cbind(ys,ys,ys)
+ldl<-length(survei)
+for (i in 1:ldl) lines(dlx[i,],dly[i,])
+```
+
+3. The Two-Way Dot Chart
+    Alternatif sajian Dot Chart tidak secara tersarang, melainkan bersilang.
+```{r}
+survei<-
+matrix(data=c(30,3,44,41,9,62,34,4,74,48,10,48,23,6,14),ncol=5,nrow=3,byrow=FALSE,dimnames=list(c("Rendah","Sedang","Tinggi"),c("Pertanian","PNS","Busines
+s owner","Profesional","Lainnya")))
+library(lattice)
+dotplot(survei,xlab="Frequency",ylab="Eye
+Color",as.table=TRUE,groups=FALSE,stack=FALSE,layout=c(1,5),scales=list(alternating=3))
+dotplot(survei,xlab="Frequency",ylab="Eye
+Color",as.table=TRUE,groups=FALSE,stack=FALSE,layout=c(5,1),scales=list(alternating=3))
+```
+
+4. The Side-by-Side Bar Chart
+```{r}
+#By Frequency
+survei<-
+matrix(data=c(30,3,44,41,9,62,34,4,74,48,10,48,23,6,14),ncol=5,nrow
+=3,byrow=FALSE,dimnames=list(c("Rendah","Sedang","Tinggi"),c("Pertanian","PNS","Business owner","Profesional","Lainnya")))
+barplot(survei,horiz=TRUE,xlab="Frequency",ylab="Pekerjaan",legend= rownames(survei),beside=TRUE,cex.names=0.6,xlim=c(0,100))
+#by Relative Frequency
+n<-sum(survei)
+propsurvei<-survei/n
+barplot(propsurvei,horiz=TRUE,xlab="Relative Frequency",ylab="Pekerjaan",legend = rownames(propsurvei),beside=TRUE,cex.names=0.6,xlim=c(0,0.3))
+```
+
+4. The Side-by-Side Stacked Bar Chart
+```{r}
+survei<-matrix(data=c(30,3,44,41,9,62,34,4,74,48,10,48,23,6,14),ncol=5,nrow
+=3,byrow=FALSE,dimnames=list(c("Rendah","Sedang","Tinggi"),c("Pertanian","PNS","Business owner","Profesional","Lainnya")))
+barplot(survei,horiz=TRUE,xlab="Frequency",ylab="Pekerjaan",legend= rownames(survei),beside=FALSE,cex.names=0.6,xlim=c(0,150))
+```
+
+5. The Mosaic Chart
+```{r}
+survei<-
+matrix(data=c(30,3,44,41,9,62,34,4,74,48,10,48,23,6,14),ncol=5,nrow=3,byrow=FALSE,dimnames=list(c("Rendah","Sedang","Tinggi"),c("Pertanian","PNS","Business owner","Profesional","Lainnya")))
+mosaicplot(t(survei),main=" ", las=1,cex=0.75,color=TRUE)
+```
+
+## Peubah Acak
+
+### Ilustrasi Sebaran Bernouli
+
+```{r}
+x <- rbinom(100,1,0.2)
+barplot(table(x))
+y <- rbinom(100,1,0.5)
+barplot(table(y))
+```
+
+### Ilustrasi Sebaran Binomial
+
+```{r}
+#X~binom(8,0.5)
+x <- rbinom(100,8,0.5)
+barplot(table(x))
+#X~binom(8,0.5)
+x <- rbinom(1000,8,0.5)
+barplot(table(x))
+```
+
+**Contoh Soal Binomial:**
+
+• Misalkan terdapat 12 nasabah asuransi di suatu tempat.
+  Diketahui bahwa proporsi nasabah telat bayar polis ialah
+  1/6. Jika antar nasabah saling bebas, tentukanlah peluang
+  bahwa terdapat 7 sampai 9 nasabah yang telat bayar polis!
+• X = banyaknya nasabah asuransi yang telat membayar
+• X ~ binomial(n = 12, p = 1/6)
+• P(7 ≤ X ≤ 9)
+
+```{r}
+pbinom(9, size=12, prob=1/6) - pbinom(6, size=12, prob=1/6)
+```
+
+### Ilustrasi Sebaran Poisson
+```{r}
+#lamda = 1
+x <- rpois(1000,1)
+barplot(table(x))
+#lamda = 3
+x <- rpois(1000,3)
+barplot(table(x))
+#lamda = 6
+x <- rpois(1000,6)
+barplot(table(x))
+```
+
+**Contoh Soal Poisson:**
+
+• Misalkan di suatu kota secara rata-rata terdapat 2 mesin
+  ATM yang rusak dalam 1 tahun.
+  a. Berapakah peluang tidak mesin ATM rusak dalam 1 tahun kedepan?
+  b. Berapakah peluang terdapat 2 mesin ATM rusak dalam 2 tahun kedepan?
+```{r}
+#Misalkan: X= banyaknya mesin ATM rusak dalam waktu 1 tahun
+#Maka X~poisson(lamda=1)
+#a. P(X=0)
+ppois(0, lambda = 1)
+#b. Misalkan Y=banyaknya mesin ATM rusak dalam waktu 2 tahun maka Y~poisson(lamda=2)>>P(Y=2)
+diff(ppois(c(1,2),lambda=2))
+```
+
+### Ilustrasi Sebaran Geometrik
+```{r}
+x <- rgeom(1000,0.2)
+barplot(table(x))
+x <- rgeom(1000,0.5)
+barplot(table(x))
+x <- rgeom(1000,0.8)
+barplot(table(x))
+```
+
+**Contoh Soal Geometrik:**
+
+• Misalkan suatu bank melakukan pengambilan undian
+  berhadiah untuk setiap bulan. Pak Yus adalah nasabah bank
+  tersebut. Jika peluang keberhasilan Pak Yus memperoleh
+  hadiah undian tersebut ialah 0.45.
+  a. Berapakah peluang Pak Yus mendapatkan hadiah undian pada bulan ke-3 ?
+  b. Berapakah peluang Pak Yus mendapatkan hadian undian minimal pada bulan ke-5 ?
+```{r}
+#Misalkan: X = banyaknya bulan yang dilalui sampai Pak Yus menang undian.
+#Maka X~geometrik(p=0.45)
+#a. P(X=3)
+diff(pgeom(c(2,3),prob = 0.45))
+#b. P(X>=5)=P(X>4)
+pgeom(4,prob = 0.45,lower.tail = FALSE)
+```
+
+### Ilustrasi Sebaran Hipergeometrik
+```{r}
+x <- rhyper(1000,50,50,10)
+barplot(table(x))
+x <- rhyper(1000,20,80,10)
+barplot(table(x))
+```
+
+**Contoh Soal Hipergeometrik:**
+
+• Misalkan terdapat 100 orang nasabah pada suatu bank
+  dengan 2 kategori, yaitu kategori A dan B dengan            masingmasing berisi 60 dan 40 orang nasabah.
+• Pada bank tersebut akan dilakukan pemilihan 20 nasabah
+  secara acak untuk dijadikan responden suatu survei
+  evaluasi.
+  a. Berapakah peluang bahwa terpilih 10 orang nasabah kategori A dan 10 orang nasabah kategori B ?
+```{r}
+#Misalkan X = banyaknya nasabah kategori A yang terpilih
+#Maka X~hipergeometrik(N=100, K=60, n=20)
+#a. P(X=10)
+dhyper(10, m=60, n=40, k=20)
+```
+
+### Terima kasih
+**Semoga materi ini bermanfaat**
+
+**Ardi Surya**
